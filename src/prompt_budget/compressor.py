@@ -20,10 +20,9 @@ class LLMLinguaCompressor:
             raise ValueError("target_ratio must be >= 1")
         if not self.enabled or target_ratio == 1 or not context.strip():
             return context, {"method": "baseline", "target_ratio": 1.0, "retention_rate": 1.0}
-        # LLMLingua rate is the retained-token fraction, not the compression multiplier.
         retention_rate = 1.0 / target_ratio
         result = self._load().compress_prompt(
-            context, rate=retention_rate, force_tokens=["\\n"], drop_consecutive=True
+            context, rate=retention_rate, force_tokens=["\n"], drop_consecutive=True
         )
         compressed = result.get("compressed_prompt", context)
         return compressed, {

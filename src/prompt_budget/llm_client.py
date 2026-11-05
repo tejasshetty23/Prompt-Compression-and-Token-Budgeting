@@ -8,12 +8,10 @@ from urllib.request import Request, urlopen
 class ChatCompletionClient:
     def __init__(self, api_key: str | None = None, base_url: str | None = None,
                  model: str | None = None, timeout: int = 120):
-        self.api_key = api_key or os.getenv("OPENAI_API_KEY")
-        self.base_url = (base_url or os.getenv("OPENAI_BASE_URL", "https://api.openai.com/v1")).rstrip("/")
-        self.model = model or os.getenv("OPENAI_MODEL", "gpt-4o-mini")
+        self.api_key = api_key or os.getenv("LLM_API_KEY") or os.getenv("OPENAI_API_KEY") or "ollama"
+        self.base_url = (base_url or os.getenv("LLM_BASE_URL", os.getenv("OPENAI_BASE_URL", "http://localhost:11434/v1"))).rstrip("/")
+        self.model = model or os.getenv("LLM_MODEL", os.getenv("OPENAI_MODEL", "qwen2.5:3b"))
         self.timeout = timeout
-        if not self.api_key:
-            raise ValueError("Set OPENAI_API_KEY before running model-backed benchmarks")
 
     def answer(self, system_instruction: str, question: str, context: str,
                temperature: float = 0.0) -> dict:

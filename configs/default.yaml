@@ -1,0 +1,18 @@
+compression:
+  enabled: true
+  target_ratio: 2.0
+  min_tokens: 32
+  chunk_size_tokens: 800
+  chunk_overlap_tokens: 80
+  top_k_chunks: 8
+  use_llmlingua: true
+  model_name: microsoft/llmlingua-2-xlm-roberta-large-meetingbank
+tokenizer:
+  encoding_name: cl100k_base
+cost:
+  input_usd_per_1k_tokens: 0.0
+  output_usd_per_1k_tokens: 0.0
+benchmark:
+  ratios: [1.0, 2.0, 3.0, 5.0]
+  runs_per_case: 3
+  temperature: 0

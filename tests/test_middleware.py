@@ -8,7 +8,7 @@ def test_instruction_and_question_are_preserved(tmp_path):
     config.compression.use_llmlingua = False
     middleware = PromptBudgetMiddleware(config, str(tmp_path / "telemetry.jsonl"))
     result = middleware.prepare("KEEP THIS", "What happened?", "The service failed.", target_ratio=1)
-    assert result.prompt.startswith("KEEP THIS\\n\\nWhat happened?")
+    assert result.prompt.startswith("KEEP THIS\n\nWhat happened?")
     assert result.system_instruction == "KEEP THIS"
     assert result.question == "What happened?"
 

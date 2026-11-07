@@ -20,3 +20,12 @@ def truncate_to_tokens(text: str, limit: int, encoding_name: str = "cl100k_base"
         return ""
     enc = _encoding(encoding_name)
     return enc.decode(enc.encode(text)[:limit]) if enc else text[:limit * 4]
+
+def truncate_to_last_tokens(text: str, limit: int, encoding_name: str = "cl100k_base") -> str:
+    """Keep the final tokens, for correctly carrying chunk overlap."""
+    if limit <= 0 or not text:
+        return ""
+    enc = _encoding(encoding_name)
+    if enc is not None:
+        return enc.decode(enc.encode(text)[-limit:])
+    return text[-limit * 4:]

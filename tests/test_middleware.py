@@ -52,3 +52,44 @@ def test_llmlingua_rate_is_inverse_of_compression_ratio():
     assert output == "short"
     assert compressor._model.rate == 0.25
     assert metadata["retention_rate_requested"] == 0.25
+
+
+def test_chunk_overlap_uses_previous_chunk_suffix():
+    from prompt_budget.chunking import chunk_text
+    from prompt_budget.tokenization import count_tokens, truncate_to_last_tokens
+
+    text = "alpha beta gamma delta epsilon zeta eta theta"
+    chunks = chunk_text(text, chunk_size=4, overlap=2, encoding_name="cl100k_base")
+    assert len(chunks) >= 2
+    previous_words = chunks[0].split()
+    next_words = chunks[1].split()
+    assert next_words[:2] == previous_words[-2:]
+    assert truncate_to_last_tokens("alpha beta gamma delta", 2).split() == ["gamma", "delta"]
+
+
+def test_chunk_text_rejects_invalid_sizes():
+    from prompt_budget.chunking import chunk_text
+    import pytest
+
+    with pytest.raises(ValueError, match="chunk_size must be positive"):
+        chunk_text("some text", 0, 0, "cl100k_base")
+    with pytest.raises(ValueError, match="overlap must be non-negative"):
+        chunk_text("some text", 4, -1, "cl100k_base")
+
+
+def test_huggingface_tokenizer_chunks_respect_limit_and_overlap():
+    from prompt_budget.chunking import chunk_text
+
+    class CharacterTokenizer:
+        def encode(self, text, add_special_tokens=False):
+            return [ord(char) for char in text]
+
+        def decode(self, token_ids, **kwargs):
+            return "".join(chr(token_id) for token_id in token_ids)
+
+    chunks = chunk_text(
+        "abcdefghij", chunk_size=4, overlap=2,
+        encoding_name="cl100k_base", tokenizer=CharacterTokenizer()
+    )
+    assert chunks == ["abcd", "cdef", "efgh", "ghij"]
+    assert all(len(chunk) <= 4 for chunk in chunks)

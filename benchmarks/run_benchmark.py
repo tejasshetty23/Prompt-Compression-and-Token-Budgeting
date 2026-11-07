@@ -31,26 +31,45 @@ def main():
     client = ChatCompletionClient(model=args.model)
     middleware = PromptBudgetMiddleware(config)
     rows = []
+    cases = [
+        json.loads(line)
+        for line in Path(args.input).read_text(encoding="utf-8").splitlines()
+        if line.strip()
+    ]
+    if not cases:
+        raise ValueError("Benchmark input contains no cases")
 
-    # Warm-up calls are deliberately excluded from the results CSV.
-    for warmup_index in range(args.warmup_runs):
-        client.answer(
-            "Answer briefly.",
-            "What is 2 + 2?",
-            "The answer is 4.",
-            temperature=0,
-        )
-        print(f"Completed excluded warm-up {warmup_index + 1}/{args.warmup_runs}")
-
-    for line in Path(args.input).read_text(encoding="utf-8").splitlines():
-        if not line.strip():
-            continue
-        case = json.loads(line)
+    for case in cases:
         required = {"question", "context", "reference", "task"}
         missing = required - case.keys()
         if missing:
             raise ValueError(f"Benchmark case missing required fields: {sorted(missing)}")
 
+    # Warm the compressor and downstream model once; exclude this call from results.
+    warmup_case = cases[0]
+    warmup_prepared = middleware.prepare(
+        warmup_case.get("system_instruction", ""),
+        warmup_case["question"],
+        warmup_case["context"],
+        target_ratio=max(config.benchmark.ratios),
+        task=warmup_case["task"],
+    )
+    client.answer(
+        warmup_prepared.system_instruction,
+        warmup_prepared.question,
+        warmup_prepared.context,
+        temperature=0,
+    )
+    print("Completed excluded compressor + LLM warm-up")
+
+    # Additional downstream-model warm-ups are also excluded from the CSV.
+    for warmup_index in range(args.warmup_runs):
+        client.answer(
+            "Answer briefly.", "What is 2 + 2?", "The answer is 4.", temperature=0,
+        )
+        print(f"Completed excluded LLM warm-up {warmup_index + 1}/{args.warmup_runs}")
+
+    for case in cases:
         for ratio in config.benchmark.ratios:
             for run_index in range(config.benchmark.runs_per_case):
                 prepared = middleware.prepare(
@@ -128,7 +147,7 @@ def main():
     output.parent.mkdir(parents=True, exist_ok=True)
     pd.DataFrame(rows).to_csv(output, index=False)
     print(f"Wrote {len(rows)} measured runs to {output}")
-    print(f"Excluded warm-up calls: {args.warmup_runs}")
+    print(f"Excluded warm-up calls: {args.warmup_runs + 1} (1 compressor + LLM, {args.warmup_runs} additional LLM)")
 
 
 if __name__ == "__main__":

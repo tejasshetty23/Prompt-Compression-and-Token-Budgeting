@@ -69,7 +69,10 @@ def main():
         )
         print(f"Completed excluded LLM warm-up {warmup_index + 1}/{args.warmup_runs}")
 
-    for case in cases:
+    total_runs = len(cases) * len(config.benchmark.ratios) * config.benchmark.runs_per_case
+    completed_runs = 0
+
+    for case_index, case in enumerate(cases, start=1):
         for ratio in config.benchmark.ratios:
             for run_index in range(config.benchmark.runs_per_case):
                 prepared = middleware.prepare(
@@ -142,6 +145,20 @@ def main():
                     "reference": reference,
                     **quality,
                 })
+                completed_runs += 1
+                print(
+                    f"[{completed_runs}/{total_runs}] case {case_index}/{len(cases)} "
+                    f"{case.get('id', 'unnamed')} | target {ratio}x | "
+                    f"run {run_index + 1}/{config.benchmark.runs_per_case} | "
+                    f"inference {inference['latency_ms']:.0f} ms",
+                    flush=True,
+                )
+
+                # Periodically checkpoint results so an interrupted run loses little work.
+                if completed_runs % 12 == 0:
+                    checkpoint = Path(args.output)
+                    checkpoint.parent.mkdir(parents=True, exist_ok=True)
+                    pd.DataFrame(rows).to_csv(checkpoint, index=False)
 
     output = Path(args.output)
     output.parent.mkdir(parents=True, exist_ok=True)

@@ -27,6 +27,9 @@ def chunk_text(
         step = chunk_size - overlap
         chunks = []
         for start in range(0, len(token_ids), step):
+            # Do not emit a final chunk made up entirely of overlap tokens.
+            if start >= len(token_ids) - overlap and start > 0:
+                break
             piece = tokenizer.decode(
                 token_ids[start : start + chunk_size],
                 skip_special_tokens=True,

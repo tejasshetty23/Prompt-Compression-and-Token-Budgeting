@@ -35,7 +35,7 @@ class LLMLinguaCompressor:
             return context, {"method": "baseline", "target_ratio": 1.0, "retention_rate": 1.0}
         retention_rate = 1.0 / target_ratio
         result = self._load().compress_prompt(
-            context, rate=retention_rate, force_tokens=["\\n"], drop_consecutive=True
+            context, rate=retention_rate, force_tokens=["\n"], drop_consecutive=True
         )
         compressed = result.get("compressed_prompt", context)
         return compressed, {

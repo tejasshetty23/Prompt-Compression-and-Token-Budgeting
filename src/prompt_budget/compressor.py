@@ -18,6 +18,16 @@ class LLMLinguaCompressor:
             )
         return self._model
 
+    def chunking_tokenizer(self):
+        """Return LLMLingua's tokenizer and a safe content-token chunk limit."""
+        model = self._load()
+        tokenizer = getattr(model, "tokenizer", None)
+        if tokenizer is None:
+            raise RuntimeError("LLMLingua did not expose its model tokenizer")
+        max_sequence = int(getattr(model, "max_seq_len", 512))
+        # Reserve positions for tokenizer-added boundary tokens.
+        return tokenizer, max(1, max_sequence - 2)
+
     def compress(self, context: str, target_ratio: float) -> tuple[str, dict]:
         if target_ratio < 1:
             raise ValueError("target_ratio must be >= 1")
@@ -25,7 +35,7 @@ class LLMLinguaCompressor:
             return context, {"method": "baseline", "target_ratio": 1.0, "retention_rate": 1.0}
         retention_rate = 1.0 / target_ratio
         result = self._load().compress_prompt(
-            context, rate=retention_rate, force_tokens=["\n"], drop_consecutive=True
+            context, rate=retention_rate, force_tokens=["\\n"], drop_consecutive=True
         )
         compressed = result.get("compressed_prompt", context)
         return compressed, {

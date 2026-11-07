@@ -37,16 +37,38 @@ class PromptBudgetMiddleware:
         if not cfg.enabled or ratio == 1 or not context.strip():
             prepared_context = context
         else:
-            chunks = chunk_text(context, cfg.chunk_size_tokens, cfg.chunk_overlap_tokens, enc)
+            tokenizer = None
+            chunk_size = cfg.chunk_size_tokens
+            overlap = cfg.chunk_overlap_tokens
+            if cfg.use_llmlingua:
+                tokenizer, model_chunk_limit = self.compressor.chunking_tokenizer()
+                # LLMLingua-2 has a 512-position model input; use its own tokenizer.
+                chunk_size = min(chunk_size, model_chunk_limit)
+                overlap = min(overlap, max(0, chunk_size - 1))
+            chunks = chunk_text(
+                context, chunk_size, overlap, enc, tokenizer=tokenizer
+            )
             ranked = rank_chunks(question, chunks, cfg.top_k_chunks)
             ranked.sort(key=lambda item: item[0])
             selected_context = "\n\n".join(item[1] for item in ranked)
             selected_tokens = count_tokens(selected_context, enc)
             if selected_tokens < cfg.min_tokens:
                 prepared_context = selected_context
-                metadata = {"method": "below_minimum", "selected_tokens": selected_tokens}
+                metadata = {
+                    "method": "below_minimum",
+                    "selected_tokens": selected_tokens,
+                    "chunks_created": len(chunks),
+                    "chunks_selected": len(ranked),
+                }
             else:
                 prepared_context, metadata = self.compressor.compress(selected_context, ratio)
+                metadata["chunking"] = {
+                    "tokenizer": "llmlingua" if tokenizer is not None else enc,
+                    "chunk_size_tokens": chunk_size,
+                    "chunk_overlap_tokens": overlap,
+                    "chunks_created": len(chunks),
+                    "chunks_selected": len(ranked),
+                }
         fixed = system_instruction + "\n\n" + question
         prefix = fixed + "\n\nContext:\n"
         if token_budget is not None:

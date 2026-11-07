@@ -9,8 +9,11 @@ class LLMLinguaCompressor:
                 from llmlingua import PromptCompressor
             except ImportError as exc:
                 raise RuntimeError("Install LLMLingua with pip install -e .") from exc
+            # Force CPU execution: the project's default PyTorch install may be
+            # CPU-only, while LLMLingua otherwise defaults to CUDA.
             self._model = PromptCompressor(
                 model_name=self.model_name,
+                device_map="cpu",
                 use_llmlingua2="llmlingua-2" in self.model_name.lower(),
             )
         return self._model

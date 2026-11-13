@@ -345,7 +345,7 @@ For the measured benchmark (execution device not recorded):
 * $\kappa_{\text{comp}} \approx \frac{3450\text{ ms}}{165\text{ tokens}} \approx \mathbf{20.9\text{ ms/token}}$
 * For Qwen 2.5 1.5B on GPU/Metal: $\kappa_{\text{prefill}} \approx \mathbf{0.95\text{ ms/token}}$
 
-Because $\kappa_{\text{comp}} \gg \kappa_{\text{prefill}}$ by a factor of 22x, prompt compression on CPU can **never** yield a net latency improvement for small local LLMs on short-to-medium contexts.
+In this benchmark, compression overhead exceeded inference-time savings. This measured result does not establish a universal hardware-independent crossover.
 
 ### C. Economic and Architectural Implications
 Prompt compression becomes computationally and economically viable under two distinct conditions:
@@ -434,3 +434,8 @@ Prompt compression represents a powerful mechanism for managing LLM context wind
 
 ### Reproducibility and interpretation caveats
 The committed benchmark contains exactly 240 rows: 60 cases × 4 target ratios, one run per case and ratio, rather than repeated trials. The original CSV did not record the semantic-similarity backend, while the implementation supported a token-Jaccard fallback when MiniLM was unavailable. Consequently, historical semantic scores cannot be verified as MiniLM-only. The updated runner records the backend in subsequent benchmark runs. Per-case ratio checks show that only 25/60 cases at 2x, 25/60 at 3x, and 27/60 at 5x are within ±5% of target; aggregate means should not be interpreted as a per-request ±5% guarantee. The configured local Ollama token prices are zero, so this experiment does not measure commercial API dollar savings.
+
+
+### Verified Experimental Environment
+
+All 240 committed CSV rows use `qwen2.5:1.5b`. The benchmark machine was a MacBook Air (Mac14,2), Apple M2, 8 CPU cores, 8 GB RAM, ARM64, macOS 26.6.2. Reported installed versions were Python 3.13.7, Ollama 0.40.11, PyTorch 2.6.0, Transformers 5.20.2, tiktoken 0.14.0, and LLMLingua 0.2.2. PyTorch MPS was available, but the CSV does not record whether compression ran on CPU or MPS. Ollama generation used `/api/generate`, temperature 0.0, top-p 1.0, and streaming disabled. Model metadata reports Qwen2 architecture, Q4_K_M quantization, approximately 1.54B parameters, 32,768-token native context, and 1,536-dimensional embeddings; the benchmark context limit was 4,096 tokens.

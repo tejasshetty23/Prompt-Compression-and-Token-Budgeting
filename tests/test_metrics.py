@@ -53,3 +53,18 @@ def test_semantic_similarity_unrelated():
     ref = "Kubernetes worker pod crashed due to an out of memory error."
     sim = semantic_similarity(pred, ref)
     assert sim < 0.30
+
+
+def test_semantic_similarity_reports_fallback_backend(monkeypatch):
+    import metrics
+    monkeypatch.setattr(metrics, "_get_semantic_model", lambda: (False, None))
+    score, backend = metrics.semantic_similarity_details("alpha beta", "alpha gamma")
+    assert score == pytest.approx(1 / 3)
+    assert backend == "token-jaccard-fallback"
+
+
+def test_semantic_similarity_reports_empty_input_backend():
+    from metrics import semantic_similarity_details
+    score, backend = semantic_similarity_details("", "reference")
+    assert score == 0.0
+    assert backend == "empty-string-exact-match"

@@ -149,7 +149,6 @@ python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --outp
 │   ├── BENCHMARK_REPORT.md          # Comprehensive empirical benchmark findings
 │   ├── IEEE_RESEARCH_PAPER.md       # Full research paper source (Markdown)
 │   ├── paper.typ                    # Typeset paper source (Typst)
-│   ├── IEEE_RESEARCH_PAPER.pdf      # Existing typeset paper PDF
 │   └── Prompt_Compression_Research_Paper_Final.pdf  # Final submission PDF
 ├── benchmarks/
 │   ├── run_benchmark.py             # Fault-tolerant model-backed benchmark runner

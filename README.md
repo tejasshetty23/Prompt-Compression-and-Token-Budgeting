@@ -11,7 +11,7 @@ Evaluated with **LLMLingua-2** (`microsoft/llmlingua-2-xlm-roberta-large-meeting
 1. **Calibrated Compression-Ratio Control**:
    - Eliminates LLMLingua-2's inherent overshooting (previously 5.8x–7.7x on requested 5.0x) using an empirical power-law calibration:
      $$r_0(R) = R^{-0.86}$$
-   - Closed-loop adaptive proportional feedback controller with bounded single-step refinement ($\tau = 0.15$), delivering predictable compression within $\pm 5\%$ of target ratios.
+   - Closed-loop adaptive proportional feedback controller with bounded single-step refinement ($\tau = 0.15$), improving aggregate ratio alignment. Per-case deviations remain; the benchmark reports the fraction of cases within each tolerance.
 2. **Context Isolation Invariant**:
    - System instructions and user questions are anchored as preserved invariants; compression operates strictly on context without mutating instructions or user queries.
 3. **Comprehensive 60-Case Enterprise Benchmark Dataset**:

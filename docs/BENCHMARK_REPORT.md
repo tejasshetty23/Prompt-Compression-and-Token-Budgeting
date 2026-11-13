@@ -125,7 +125,7 @@ A critical finding of this research is the dramatic disparity between prompt com
 1. **Inference Savings vs Compression Overhead:** Compressing context from 165 tokens to 34 tokens saved 165ms of LLM generation time. However, computing the compression on CPU required **3,410ms** of forward-pass tensor calculations. The net result is a **9.4x slowdown** in end-to-end response time!
 2. **When Does Compression Make Sense?**
    * **Small Local Models (1.5B–7B on Edge/CPU):** Prompt compression is **strictly counterproductive** for latency. Raw prompts should be passed directly to the LLM.
-   * **Large Commercial Cloud APIs (GPT-4o, Claude 3.5 Sonnet):** Where prompt tokens cost \$3.00–\$15.00 per million tokens and rate limits constrain throughput, prompt compression provides massive economic savings (up to 75% cost reduction) and net latency gains when the compressor runs on a dedicated GPU accelerator.
+   * **Large Commercial Cloud APIs (GPT-4o, Claude 3.5 Sonnet):** Where prompt tokens cost \$3.00–\$15.00 per million tokens and rate limits constrain throughput, prompt compression may reduce costs under suitable assumptions. This is an illustrative scenario only: this benchmark did not measure commercial API usage or validate a 75% saving.
    * **Long Document Caching:** When compressed context is reused across hundreds of queries (e.g. documentation or static runbooks), the 3.4-second compression cost is amortized to zero.
 
 ---

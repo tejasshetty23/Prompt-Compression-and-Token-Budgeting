@@ -22,7 +22,7 @@ Evaluated with **LLMLingua-2** (`microsoft/llmlingua-2-xlm-roberta-large-meeting
 4. **Task-Based Evaluation Suite**:
    - Excluded model and compressor warm-ups.
    - Granular latency decomposition: Compression Latency vs Inference Latency vs End-to-End Latency.
-   - Task-appropriate metrics: Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic similarity with with backend caveat: the original CSV does not preserve whether MiniLM or token-Jaccard fallback was used.
+   - Task-appropriate metrics: Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic similarity with backend caveat: the original CSV does not preserve whether MiniLM or token-Jaccard fallback was used.
    - Per-case and task-aggregated means and standard deviations; one run per case/ratio, not repeated trials.
 5. **Ingestion & Token Budgeting Middleware**:
    - Ingestion utilities for `.log`, `.pdf` (via `pdfplumber`), `.txt`, `.md`, `.csv`, and `.jsonl`.

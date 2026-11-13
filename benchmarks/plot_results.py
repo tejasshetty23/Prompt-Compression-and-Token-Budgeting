@@ -66,7 +66,7 @@ def main():
                 fmt="-o", color="#ff7f0e", capsize=4, label="Token F1")
     if "semantic_similarity" in sub_multi.columns:
         ax.errorbar(sub_multi.index, sub_multi["semantic_similarity"], yerr=sub_multi_std["semantic_similarity"],
-                    fmt="--^", color="#2ca02c", capsize=4, label="Semantic Sim (MiniLM)")
+                    fmt="--^", color="#2ca02c", capsize=4, label="Semantic Similarity (backend not recorded)")
     if "key_fact_recall" in sub_multi.columns:
         ax.errorbar(sub_multi.index, sub_multi["key_fact_recall"], yerr=sub_multi_std["key_fact_recall"],
                     fmt=":d", color="#d62728", capsize=4, label="Key Fact Recall")
@@ -108,7 +108,7 @@ def main():
     x = np.arange(len(lat_df.index))
     width = 0.28
 
-    rects1 = ax.bar(x - width/2, lat_df["compression_latency_ms"], width, label="LLMLingua CPU Latency", color="#4575b4")
+    rects1 = ax.bar(x - width/2, lat_df["compression_latency_ms"], width, label="Compression Latency", color="#4575b4")
     rects2 = ax.bar(x + width/2, lat_df["inference_latency_ms"], width, label="Local LLM Inference Latency", color="#f46d43")
 
     ax.plot(x, lat_df["end_to_end_latency_ms"], color="#d73027", marker="o", linewidth=2.5, label="End-to-End Latency")

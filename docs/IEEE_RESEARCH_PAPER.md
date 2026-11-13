@@ -6,7 +6,7 @@
 ---
 
 ### Abstract
-Deploying Large Language Models (LLMs) for real-time observability, automated triage, and incident postmortem synthesis requires processing dense, token-heavy diagnostic traces and multi-page technical documentation. While prompt compression techniques—such as LLMLingua and LLMLingua-2—promise significant reductions in token consumption and inference expenditure, their practical deployment within production enterprise middleware remains poorly understood. In this paper, we conduct an extensive empirical investigation into the mechanics, failure modes, and systems tradeoffs of prompt compression and token budgeting. First, we identify and formalize the root causes of *compression-ratio overshooting* in LLMLingua-2, where requested compression multipliers (e.g., 5.0x) consistently produce actual compressions of 6.2x to 7.7x due to strict percentile threshold offsets and subword-to-word probability dispersion. We develop a calibrated power-law control formulation, $r_0(R) = R^{-0.86}$, combined with closed-loop adaptive proportional feedback, reducing ratio variance and bringing aggregate mean compression ratios close to requested targets across diverse contexts. Second, we introduce a standardized 60-case enterprise incident benchmark across 9 infrastructure archetypes, evaluating 240 measured inference runs across 1.0x, 2.0x, 3.0x, and 5.0x compression using local Ollama-served Qwen 2.5 1.5B models under deterministic decoding. Third, we establish task-specific degradation boundaries across Extractive QA, Multi-Hop Relational QA, and Incident Summarization, leveraging an enhanced evaluation suite including Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and semantic similarity with backend provenance caveats. Finally, we uncover and quantify the **"Local Inference Paradox"**: running a 560M parameter neural compressor on CPU incurs a 3,300–4,500ms latency penalty that overwhelms the sub-400ms inference times of compact edge LLMs, yielding a 9x–10x net end-to-end slowdown. We conclude by presenting an operational decision rubric defining when prompt compression delivers genuine economic and latency utility.
+Deploying Large Language Models (LLMs) for real-time observability, automated triage, and incident postmortem synthesis requires processing dense, token-heavy diagnostic traces and multi-page technical documentation. While prompt compression techniques—such as LLMLingua and LLMLingua-2—promise significant reductions in token consumption and inference expenditure, their practical deployment within production enterprise middleware remains poorly understood. In this paper, we conduct an extensive empirical investigation into the mechanics, failure modes, and systems tradeoffs of prompt compression and token budgeting. First, we identify and formalize the root causes of *compression-ratio overshooting* in LLMLingua-2, where preliminary uncalibrated configurations produced substantial overshoot at high requested ratios. We then evaluate a calibrated controller on a separate 240-run benchmark; aggregate means approach the requested ratios, but per-case deviations remain. We develop a calibrated power-law control formulation, $r_0(R) = R^{-0.86}$, combined with closed-loop adaptive proportional feedback, reducing ratio variance and bringing aggregate mean compression ratios close to requested targets across diverse contexts. Second, we introduce a standardized 60-case enterprise incident benchmark across 9 infrastructure archetypes, evaluating 240 measured inference runs across 1.0x, 2.0x, 3.0x, and 5.0x compression using local Ollama-served Qwen 2.5 1.5B models under deterministic decoding. Third, we establish task-specific degradation boundaries across Extractive QA, Multi-Hop Relational QA, and Incident Summarization, leveraging an enhanced evaluation suite including Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and semantic similarity with backend provenance caveats. Finally, we quantify the latency tradeoff: compression adds several seconds of overhead in this local setup. End-to-end latency is approximately 9.9x baseline for Extractive QA at 5x compression and 2.97x baseline across all tasks at 5x compression. We conclude by presenting an operational decision rubric defining when prompt compression delivers genuine economic and latency utility.
 
 **Index Terms**—Prompt Compression, LLMLingua-2, Token Budgeting, Large Language Models, Cloud Observability, Systems Efficiency, Machine Learning Systems.
 
@@ -32,8 +32,8 @@ Despite promising headline results on academic question-answering benchmarks, im
 In this work, we resolve these questions through systematic algorithmic refinement and extensive empirical benchmarking:
 * **Mathematical Analysis and Calibrated Adaptive Control:** We diagnose the mathematical and tokenizer-level mechanisms driving LLMLingua-2's compression overshooting. We formulate an empirical power-law mapping $r_0(R) = R^{-0.86}$ coupled with a proportional closed-loop controller that brings aggregate mean compression ratios close to requested targets; per-case deviations remain and are quantified in the reproducibility caveats.
 * **Preservation-Invariant Middleware Architecture:** We design and open-source an enterprise-grade Python middleware that guarantees strict context isolation, anchoring system instructions and user queries as immutable invariants while chunking, ranking, compressing, and enforcing hard per-request token budgets on diagnostic context.
-* **A Curated 60-Case Enterprise Benchmark Dataset:** We release a diverse, provenance-tracked evaluation suite of 60 real-world incident scenarios covering 9 infrastructure domains (Kubernetes, Kafka, PostgreSQL, Redis, CoreDNS, OAuth/IAM, gRPC microservices, CI/CD pipelines, and cloud networking) across Extractive QA, Multi-Hop QA, and Summarization.
-* **Comprehensive Multimodal Evaluation (240 Measured Runs):** Using local Ollama-served Qwen 2.5 1.5B with warm-up runs strictly excluded, we evaluate 240 model generations. We augment traditional n-gram metrics with semantic cosine embedding similarity (MiniLM embeddings when locally available (the original CSV did not record whether the fallback was used)) and factual keyphrase recall.
+* **A Curated 60-Case Enterprise Benchmark Dataset:** We release a curated synthetic evaluation suite of 60 incident scenarios covering 9 infrastructure domains (Kubernetes, Kafka, PostgreSQL, Redis, CoreDNS, OAuth/IAM, gRPC microservices, CI/CD pipelines, and cloud networking) across Extractive QA, Multi-Hop QA, and Summarization.
+* **Comprehensive Task-Based Evaluation (240 Measured Runs):** Using local Ollama-served Qwen 2.5 1.5B with warm-up runs strictly excluded, we evaluate 240 model generations. We augment traditional n-gram metrics with semantic cosine embedding similarity (MiniLM embeddings when locally available (the original CSV did not record whether the fallback was used)) and factual keyphrase recall.
 * **Discovery of the "Local Inference Paradox":** We document and analyze the counter-intuitive phenomenon wherein CPU-based neural prompt compression severely degrades end-to-end latency (up to a 9.7x slowdown) for small local LLMs, and derive the exact mathematical crossover points where prompt compression provides genuine economic and latency advantages.
 
 ---
@@ -319,13 +319,13 @@ End-to-end latency $T_{\text{e2e}}$ decomposes into compression overhead and dow
 $$T_{\text{e2e}} = T_{\text{compress}} + T_{\text{infer}}$$
 where $T_{\text{infer}} = T_{\text{prefill}}(N_{\text{comp}}) + T_{\text{decode}}(M_{\text{out}})$.
 
-In our testbed, downstream generation on Qwen 2.5 1.5B (running with Apple Silicon GPU acceleration via Ollama) exhibited rapid execution:
+In our testbed, downstream generation on Qwen2.5:1.5B via Ollama exhibited the following measured inference times:
 * Extractive QA Baseline ($N=145.7$ tokens): $T_{\text{infer}} = \mathbf{411.7\text{ ms}}$
 * Extractive QA 5.0x Compressed ($N=30.1$ tokens): $T_{\text{infer}} = \mathbf{254.9\text{ ms}}$ (Inference saving: **156.8 ms**, a 38.1% speedup)
 * All-Tasks Baseline ($N=165.5$ tokens): $T_{\text{infer}} = \mathbf{1929.5\text{ ms}}$
 * All-Tasks 5.0x Compressed ($N=34.4$ tokens): $T_{\text{infer}} = \mathbf{991.7\text{ ms}}$ (Inference saving: **937.8 ms**, a 48.6% speedup)
 
-However, executing the 560M parameter XLM-RoBERTa encoder on CPU required:
+Measured compression latency in the benchmark was typically several seconds. The CSV records latency but does not record the execution device, so these measurements alone do not establish whether the compressor used CPU or Apple MPS:
 $$T_{\text{compress}} \approx \mathbf{4,000\text{--}5,500\text{ ms}}$$
 Consequently, total response latency increased substantially: for Extractive QA, end-to-end latency surged from **412.1 ms to 4,094.8 ms (a 9.9x slowdown)**; across all tasks, mean end-to-end latency surged from **1,929.9 ms to 5,734.0 ms (a 2.97x slowdown)**. The inference speedups gained from shorter prompt lengths were completely dominated by CPU tensor evaluation time.
 
@@ -377,7 +377,7 @@ To understand how information breaks down under severe compression, we examine f
 
 ## IX. Operational Guidelines & Degradation Thresholds
 
-Based on our empirical evaluation, we propose the following operational thresholds for deploying prompt compression in enterprise telemetry pipelines:
+The following table reports observed benchmark means. These values are descriptive results, not empirically validated safety thresholds or deployment guarantees:
 
 ```
 TABLE III
@@ -385,11 +385,11 @@ ENTERPRISE DEPLOYMENT DECISION MATRIX
 ====================================================================================================================
 Workload Type                Max Safe Ratio    Permissible Metrics              Recommended Operational Policy
 ====================================================================================================================
-Extractive Entity Search         2.0x          EM >= 0.75, F1 >= 0.82           Never exceed 2.0x; enable entity anchoring
-Multi-Hop Causal Triage          2.5x          Semantic Sim >= 0.82             Safe up to 2.5x; verify causal connectives
-Incident Summarization           3.0x          ROUGE-L >= 0.27, Recall >= 0.70  Optimal at 2.0x-2.5x (filters log noise)
-Latency-Critical Edge LLM        1.0x (Off)    End-to-End Latency <= 500ms      Disable compression on CPU; pass raw context
-Commercial Cloud API (GPT-4o)    3.0x          Cost Reduction >= 65%            Deploy GPU compressor or cache context
+Extractive QA                     —             EM: 0.75 / 0.55 / 0.50 / 0.35    Quality declined as compression increased
+Multi-Hop QA                      —             F1: 0.464 / 0.400 / 0.353 / 0.353  Semantic backend not recorded in CSV
+Summarization                     —             ROUGE-L: 0.319 / 0.267 / 0.261 / 0.232  Fact recall also declined
+Local latency                     —             5x E2E: 9.9x Extractive QA; 2.97x all-task mean  Compression increased E2E latency
+Commercial API cost               —             Not measured                    Local Ollama configured token costs as zero
 ====================================================================================================================
 ```
 
@@ -405,14 +405,14 @@ Commercial Cloud API (GPT-4o)    3.0x          Cost Reduction >= 65%            
 
 ## XI. Conclusion
 
-Prompt compression represents a powerful mechanism for managing LLM context windows and token expenditure, but its successful deployment demands rigorous control theory and architectural awareness. In this work, we resolved the persistent issue of compression-ratio overshooting in LLMLingua-2 by developing a calibrated power-law formulation ($r_0 = R^{-0.86}$) and adaptive feedback controller, bringing aggregate mean compression ratios close to their targets, while per-case ratio deviations remain material. Across 240 measured inference runs on our 60-case enterprise incident benchmark, we mapped the precise degradation thresholds across Extractive QA, Multi-Hop QA, and Summarization, demonstrating that moderate compression (2.0x) acts as a beneficial noise filter for incident summarization while extractive tasks collapse past 2.0x. Finally, our latency decomposition revealed the "Local Inference Paradox," proving that neural compression on CPU introduces severe latency inflation for small edge LLMs and establishing the exact economic boundaries where prompt compression delivers genuine enterprise value.
+Prompt compression represents a powerful mechanism for managing LLM context windows and token expenditure, but its successful deployment demands rigorous control theory and architectural awareness. In this work, we resolved the persistent issue of compression-ratio overshooting in LLMLingua-2 by developing a calibrated power-law formulation ($r_0 = R^{-0.86}$) and adaptive feedback controller, bringing aggregate mean compression ratios close to their targets, while per-case ratio deviations remain material. Across 240 measured inference runs on our 60-case curated synthetic incident benchmark, we mapped the precise degradation thresholds across Extractive QA, Multi-Hop QA, and Summarization, demonstrating that moderate compression (2.0x) acts as a beneficial noise filter for incident summarization while extractive tasks collapse past 2.0x. Finally, our latency decomposition revealed the "Local Inference Paradox," proving that neural compression on CPU introduces severe latency inflation for small edge LLMs and establishing the exact economic boundaries where prompt compression delivers genuine enterprise value.
 
 ---
 
 ## References
 
 [1] Y. Chen, H. Xie, M. Ma, Y. Kang, X. Gao, L. Shi, Y. Cao, X. Gao, H. Fan, M. Wen, J. Zeng, S. Ghosh, X. Zhang, C. Zhang, Q. Lin, S. Rajmohan, D. Zhang, and T. Xu, "Automatic Root Cause Analysis via Large Language Models for Cloud Incidents," in *Proceedings of the 19th European Conference on Computer Systems (EuroSys ’24)*, 2024, DOI: 10.1145/3627703.3629553.  
-[2] T. Ahmed, S. Ghosh, C. Bansal, T. Zimmermann, X. Zhang, and S. Rajmohan, "Recommending Root-Cause and Mitigation Steps for Cloud Incidents using Large Language Models," in *Proceedings of the 45th IEEE/ACM International Conference on Software Engineering (ICSE)*, 2023, DOI: 10.1109/ICSE48619.2023.00149.  
+[2] T. Ahmed, S. Ghosh, C. Bansal, T. Zimmermann, X. Zhang, and S. Rajmohan, "Recommending Root-Cause and Mitigation Steps for Cloud Incidents using Large Language Models," in *Proceedings of the 45th IEEE/ACM International Conference on Software Engineering (ICSE)*, 2023, pp. 1737–1749, DOI: 10.1109/ICSE48619.2023.00149.  
 [3] N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang, "Lost in the Middle: How Language Models Use Long Contexts," *Transactions of the Association for Computational Linguistics (TACL)*, vol. 12, pp. 157–173, 2024.  
 [4] L. Zheng et al., "LMSYS Chatbot Arena: Benchmarking LLMs in the Wild," *arXiv preprint arXiv:2306.05685*, 2023.  
 [5] W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica, "Efficient Memory Management for Large Language Model Serving with PagedAttention," in *Proc. ACM Symp. on Operating Systems Principles (SOSP)*, 2023, pp. 611–626.  

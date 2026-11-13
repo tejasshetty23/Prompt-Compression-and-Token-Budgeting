@@ -1,7 +1,7 @@
 # Benchmark Dataset Specification and Provenance
 
 ## 1. Overview
-The benchmark dataset consists of 60 curated incident investigation cases designed to rigorously evaluate prompt compression and token budgeting using LLMLingua-2. The dataset mirrors real-world telemetry, diagnostic logs, and postmortem records from production enterprise systems.
+The benchmark dataset consists of 60 curated incident investigation cases designed to rigorously evaluate prompt compression and token budgeting using LLMLingua-2. The dataset is a curated synthetic benchmark designed to resemble telemetry, diagnostic logs, and postmortem records. It is not a collection of production incident records, and no external production provenance is claimed.
 
 ## 2. Dataset Composition
 The dataset contains exactly 60 cases divided equally across three core downstream LLM evaluation tasks:
@@ -29,7 +29,7 @@ The dataset spans 9 major enterprise infrastructure and system archetypes:
 ### A. Extractive QA
 * **Objective**: Evaluate retrieval of precise operational entities under token reduction.
 * **Question Archetypes**: Specific error codes, IP addresses, namespaces, timestamps, volume names, commit hashes, and component names.
-* **Ground Truth**: Ground-truth strings are canonical, case-normalized exact values extracted directly from the log timeline.
+* **Ground Truth**: Ground-truth strings are canonical target answers defined for the curated synthetic cases.
 
 ### B. Multi-Hop QA
 * **Objective**: Evaluate retention of causal relationships, cross-event temporal sequences, and multi-component dependencies.

@@ -147,7 +147,10 @@ python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --outp
 │   ├── DATASET.md                   # Dataset specification, taxonomy & statistics
 │   ├── METHODOLOGY.md               # Scientific methodology & control theory
 │   ├── BENCHMARK_REPORT.md          # Comprehensive empirical benchmark findings
-│   └── IEEE_RESEARCH_PAPER.md       # Research paper source (Markdown)
+│   ├── IEEE_RESEARCH_PAPER.md       # Full research paper source (Markdown)
+│   ├── paper.typ                    # Typeset paper source (Typst)
+│   ├── IEEE_RESEARCH_PAPER.pdf      # Existing typeset paper PDF
+│   └── Prompt_Compression_Research_Paper_Final.pdf  # Final submission PDF
 ├── benchmarks/
 │   ├── run_benchmark.py             # Fault-tolerant model-backed benchmark runner
 │   ├── analyze_results.py           # Statistical aggregation (mean, std)
@@ -161,9 +164,11 @@ python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --outp
 │   ├── tokenization.py              # Token counting & boundary truncation
 │   ├── telemetry.py                 # Telemetry & cost logging
 │   ├── llm_client.py                # Local OpenAI-compatible inference client
+│   ├── config.py                    # Configuration loading and validation
 │   └── api.py                       # FastAPI REST service
 └── tests/
-    └── test_middleware.py           # Regression & unit test suite
+    ├── test_middleware.py           # Middleware regression & unit tests
+    └── test_metrics.py              # Evaluation metric tests
 ```
 
 

@@ -21,7 +21,7 @@ from metrics import (
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument("--input", default="data/benchmark.example.jsonl")
+    parser.add_argument("--input", default="data/benchmark.jsonl")
     parser.add_argument("--config", default="configs/default.yaml")
     parser.add_argument("--output", default="artifacts/benchmark_results.csv")
     parser.add_argument("--model", default=None)

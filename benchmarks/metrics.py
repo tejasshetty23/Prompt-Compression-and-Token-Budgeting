@@ -62,7 +62,6 @@ def _get_semantic_model():
     global _SEMANTIC_MODEL, _SEMANTIC_TOKENIZER
     if _SEMANTIC_MODEL is None:
         try:
-            import os
             import torch
             from transformers import AutoTokenizer, AutoModel
             model_id = "sentence-transformers/all-MiniLM-L6-v2"
@@ -83,7 +82,7 @@ def semantic_similarity_details(prediction: str, reference: str) -> tuple[float,
         pred_words = set(normalize_answer(prediction).split())
         ref_words = set(normalize_answer(reference).split())
         if not pred_words or not ref_words:
-            return 0.0
+            return 0.0, "token-jaccard-fallback"
         return len(pred_words & ref_words) / len(pred_words | ref_words), "token-jaccard-fallback"
     import torch
     import torch.nn.functional as F

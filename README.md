@@ -1,29 +1,29 @@
 # Prompt Compression and Token Budgeting using LLMLingua
 
-An enterprise-grade Python middleware and research benchmark for question-aware prompt compression and token-budget enforcement on telemetry logs, diagnostic traces, and multi-page technical documents.
+A Python middleware prototype and research benchmark for question-aware prompt compression and token-budget enforcement on telemetry logs, diagnostic traces, and multi-page technical documents.
 
-Evaluated with **LLMLingua-2** (`microsoft/llmlingua-2-xlm-roberta-large-meetingbank`) and local open-source instruction models via **Ollama** (e.g., `Qwen 2.5 1.5B` / `Qwen 2.5 3B`) with zero external API fees.
+Evaluated with **LLMLingua-2** (`microsoft/llmlingua-2-xlm-roberta-large-meetingbank`) and local open-source instruction models via **Ollama** (e.g., `Qwen 2.5 1.5B` / `Qwen 2.5 3B`) using local inference; commercial API cost savings were not measured.
 
 ---
 
 ## Key Features & Enhancements
 
 1. **Calibrated Compression-Ratio Control**:
-   - Eliminates LLMLingua-2's inherent overshooting (previously 5.8x–7.7x on requested 5.0x) using an empirical power-law calibration:
+   - Calibrates requested ratios with aggregate means close to targets; per-case deviations remain using an empirical power-law calibration:
      $$r_0(R) = R^{-0.86}$$
    - Closed-loop adaptive proportional feedback controller with bounded single-step refinement ($\tau = 0.15$), improving aggregate ratio alignment. Per-case deviations remain; the benchmark reports the fraction of cases within each tolerance.
 2. **Context Isolation Invariant**:
    - System instructions and user questions are anchored as preserved invariants; compression operates strictly on context without mutating instructions or user queries.
-3. **Comprehensive 60-Case Enterprise Benchmark Dataset**:
+3. **Curated 60-Case Synthetic Benchmark Dataset**:
    - **20 Extractive QA** cases (`extract-001` to `extract-020`): precise entity and metric retrieval under compression.
    - **20 Multi-Hop QA** cases (`multi-001` to `multi-020`): multi-clause causal sequence and dependency reasoning.
    - **20 Incident Summarization** cases (`summary-001` to `summary-020`): cause, impact, resolution, and outcome retention.
    - Covers 9 enterprise infrastructure archetypes: Kubernetes, Kafka, PostgreSQL, Redis, CoreDNS, OAuth/IAM, gRPC microservices, CI/CD, and BGP/Cloud networking.
-4. **Reliable Multimodal Evaluation Suite**:
+4. **Task-Based Evaluation Suite**:
    - Excluded model and compressor warm-ups.
    - Granular latency decomposition: Compression Latency vs Inference Latency vs End-to-End Latency.
-   - Task-appropriate metrics: Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic similarity with explicit backend provenance (MiniLM when locally available; otherwise labelled token-Jaccard fallback).
-   - Per-case and task-aggregated mean and standard deviation reporting.
+   - Task-appropriate metrics: Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic similarity with with backend caveat: the original CSV does not preserve whether MiniLM or token-Jaccard fallback was used.
+   - Per-case and task-aggregated means and standard deviations; one run per case/ratio, not repeated trials.
 5. **Ingestion & Token Budgeting Middleware**:
    - Ingestion utilities for `.log`, `.pdf` (via `pdfplumber`), `.txt`, `.md`, `.csv`, and `.jsonl`.
    - Lexical token-window chunking (800-token chunks with 80-token overlap) and question-overlap ranking.
@@ -136,14 +136,14 @@ python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --outp
 ├── configs/
 │   └── default.yaml                 # Compression, tokenizer, cost & benchmark config
 ├── data/
-│   ├── benchmark.jsonl              # 60 curated enterprise incident cases (20/task)
+│   ├── benchmark.jsonl              # 60 curated synthetic incident cases (20/task)
 │   ├── build_benchmark_dataset.py   # Dataset builder script
 │   └── documents/                   # Sample raw enterprise log and document inputs
 ├── docs/
 │   ├── DATASET.md                   # Dataset specification, taxonomy & statistics
 │   ├── METHODOLOGY.md               # Scientific methodology & control theory
 │   ├── BENCHMARK_REPORT.md          # Comprehensive empirical benchmark findings
-│   └── IEEE_RESEARCH_PAPER.md       # Complete 10-page academic research paper
+│   └── IEEE_RESEARCH_PAPER.md       # Research paper source (Markdown)
 ├── benchmarks/
 │   ├── run_benchmark.py             # Fault-tolerant model-backed benchmark runner
 │   ├── analyze_results.py           # Statistical aggregation (mean, std)
@@ -161,3 +161,8 @@ python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --outp
 └── tests/
     └── test_middleware.py           # Regression & unit test suite
 ```
+
+
+## Verified Benchmark Snapshot
+
+All 240 rows in `artifacts/benchmark_results.csv` use `qwen2.5:1.5b`. Aggregate actual compression ratios: 1x 1.000, 2x 1.980, 3x 2.984, 5x 4.837. The fraction within ±5% is 60/60, 25/60, 25/60, and 27/60 respectively. Across all tasks, mean end-to-end latency is 1,929.9 ms at 1x and 5,734.0 ms at 5x (2.97x). Commercial API cost savings were not measured; local configured cost fields are zero. The dataset is synthetic and curated, not production telemetry.

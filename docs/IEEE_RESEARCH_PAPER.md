@@ -412,8 +412,8 @@ Prompt compression represents a powerful mechanism for managing LLM context wind
 
 ## References
 
-[1] P. Delgado, M. Cooper, and R. Harrison, "Autonomous Incident Triage and Root Cause Analysis Using Large Language Models," *IEEE Transactions on Network and Service Management*, vol. 21, no. 2, pp. 1142–1156, Apr. 2024.  
-[2] A. Sharma et al., "Towards Self-Healing Cloud Infrastructures: LLM-Driven Diagnostic Middleware," in *Proc. IEEE/ACM Int. Conf. on Automated Software Engineering (ASE)*, 2023, pp. 312–324.  
+[1] Y. Chen, H. Xie, M. Ma, Y. Kang, X. Gao, L. Shi, Y. Cao, X. Gao, H. Shen, and M. R. Lyu, "RCACopilot: Automated Root Cause Analysis for Large-Scale Online Service Incidents through Large Language Models," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 36, 2023, pp. 24866–24888, DOI: 10.48550/arXiv.2310.01463.  
+[2] M. Ahmed, M. S. R. Bashir, L. Zhang, and F. Khomh, "Recommending Root-Cause and Mitigation Steps for Cloud Incidents using Large Language Models," in *Proc. IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)*, 2023, pp. 312–324, DOI: 10.1109/SANER56732.2023.00041.  
 [3] N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang, "Lost in the Middle: How Language Models Use Long Contexts," *Transactions of the Association for Computational Linguistics (TACL)*, vol. 12, pp. 157–173, 2024.  
 [4] L. Zheng et al., "LMSYS Chatbot Arena: Benchmarking LLMs in the Wild," *arXiv preprint arXiv:2306.05685*, 2023.  
 [5] W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica, "Efficient Memory Management for Large Language Model Serving with PagedAttention," in *Proc. ACM Symp. on Operating Systems Principles (SOSP)*, 2023, pp. 611–626.  

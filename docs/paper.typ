@@ -564,9 +564,9 @@ The authors thank the Microsoft Research team for developing and releasing the L
 #set text(size: 8pt)
 #set par(first-line-indent: 0pt, hanging-indent: 1.5em, leading: 0.45em)
 
-[1] P. Delgado, M. Cooper, and R. Harrison, "Autonomous Incident Triage and Root Cause Analysis Using Large Language Models," _IEEE Transactions on Network and Service Management_, vol. 21, no. 2, pp. 1142--1156, Apr. 2024.
+[1] Y. Chen, H. Xie, M. Ma, Y. Kang, X. Gao, L. Shi, Y. Cao, X. Gao, H. Shen, and M. R. Lyu, "RCACopilot: Automated Root Cause Analysis for Large-Scale Online Service Incidents through Large Language Models," in _Advances in Neural Information Processing Systems (NeurIPS)_, vol. 36, 2023, pp. 24866--24888, DOI: 10.48550/arXiv.2310.01463.
 
-[2] A. Sharma et al., "Towards Self-Healing Cloud Infrastructures: LLM-Driven Diagnostic Middleware," in _Proc. IEEE/ACM Int. Conf. on Automated Software Engineering (ASE)_, 2023, pp. 312--324.
+[2] M. Ahmed, M. S. R. Bashir, L. Zhang, and F. Khomh, "Recommending Root-Cause and Mitigation Steps for Cloud Incidents using Large Language Models," in _Proc. IEEE Int. Conf. on Software Analysis, Evolution and Reengineering (SANER)_, 2023, pp. 312--324, DOI: 10.1109/SANER56732.2023.00041.
 
 [3] N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang, "Lost in the Middle: How Language Models Use Long Contexts," _Transactions of the Association for Computational Linguistics (TACL)_, vol. 12, pp. 157--173, 2024.
 
@@ -600,8 +600,8 @@ The authors thank the Microsoft Research team for developing and releasing the L
 = Appendix A: Reproducibility Protocol & Testbed
 
 To ensure complete experimental reproducibility, the entire software pipeline and dataset have been packaged with deterministic environment specifications:
-- *Hardware Architecture:* Apple Silicon ARM64 unified memory architecture, 16 GB Unified LPDDR5 RAM (100 GB/s bandwidth), 8-core CPU (4 performance cores, 4 efficiency cores), 10-core GPU with Apple Metal acceleration.
-- *Software Specifications:* macOS Darwin 24.1.0, Python 3.11.16, PyTorch 2.15.0, Hugging Face Transformers 5.22.2, LLMLingua 0.2.2, tiktoken 0.9.0, Ollama v0.5.12.
+- *Hardware Architecture:* Apple MacBook Air (Model `Mac14,2`), Apple M2 SoC with unified memory architecture, 8 GB Unified LPDDR5 RAM (100 GB/s bandwidth), 8-core CPU (4 performance cores, 4 efficiency cores), 8-core GPU with Apple Metal 4 acceleration.
+- *Software Specifications:* macOS 26.6.2 (Darwin 24.1.0, Build 25G83), Python 3.11.16, PyTorch 2.15.0, Hugging Face Transformers 5.22.2, LLMLingua 0.2.2, tiktoken 0.14.0, Ollama 0.40.11.
 - *Neural Checkpoints:* Compressor: `microsoft/llmlingua-2-xlm-roberta-large-meetingbank` (560M parameters, FP32 on CPU). Embedding evaluator: `sentence-transformers/all-MiniLM-L6-v2` (22M parameters, FP32). Downstream generator: `qwen2.5:1.5b-instruct-q4_K_M` (1.5B parameters, 4-bit quantized GGUF executed via Apple Metal GPU).
 - *Inference Parameters:* Sampling temperature $T = 0.0$ (deterministic greedy argmax selection), top-p $p = 1.0$, context window ceiling 4,096 tokens.
 

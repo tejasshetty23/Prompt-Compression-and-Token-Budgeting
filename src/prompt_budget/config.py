@@ -12,6 +12,9 @@ class CompressionConfig(BaseModel):
     top_k_chunks: int = Field(8, ge=1)
     use_llmlingua: bool = True
     model_name: str = "microsoft/llmlingua-2-xlm-roberta-large-meetingbank"
+    adaptive_control: bool = True
+    tolerance: float = Field(0.15, ge=0.0)
+    max_refinements: int = Field(1, ge=0)
 
 class TokenizerConfig(BaseModel):
     encoding_name: str = "cl100k_base"

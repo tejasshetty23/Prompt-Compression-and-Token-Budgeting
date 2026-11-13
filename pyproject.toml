@@ -11,7 +11,7 @@ dependencies = ["pydantic>=2.6", "PyYAML>=6.0", "tiktoken>=0.7", "pdfplumber>=0.
 
 [project.optional-dependencies]
 compression = ["llmlingua>=0.2.2"]
-dev = ["pytest>=8.0", "httpx>=0.27", "ruff>=0.4"]
+dev = ["pytest>=8.0", "httpx>=0.27", "ruff>=0.4", "matplotlib>=3.7", "sentence-transformers>=2.2"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

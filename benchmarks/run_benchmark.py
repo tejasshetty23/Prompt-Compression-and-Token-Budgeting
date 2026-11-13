@@ -9,7 +9,14 @@ from prompt_budget.config import load_config
 from prompt_budget.middleware import PromptBudgetMiddleware
 from prompt_budget.llm_client import ChatCompletionClient
 from prompt_budget.tokenization import count_tokens
-from metrics import exact_match, token_f1, rouge_l
+from metrics import (
+    exact_match,
+    token_f1,
+    rouge_l,
+    rouge_scores,
+    key_fact_recall,
+    semantic_similarity,
+)
 
 
 def main():
@@ -22,6 +29,10 @@ def main():
         "--warmup-runs", type=int, default=2,
         help="Unmeasured local-model warm-up calls before benchmark runs (default: 2).",
     )
+    parser.add_argument(
+        "--resume", action="store_true", default=True,
+        help="Resume from existing output CSV if present (default: True).",
+    )
     args = parser.parse_args()
 
     if args.warmup_runs < 0:
@@ -30,7 +41,20 @@ def main():
     config = load_config(args.config)
     client = ChatCompletionClient(model=args.model)
     middleware = PromptBudgetMiddleware(config)
+    output_path = Path(args.output)
+    completed_keys = set()
     rows = []
+    if args.resume and output_path.exists():
+        try:
+            existing_df = pd.read_csv(output_path)
+            rows = existing_df.to_dict("records")
+            for r in rows:
+                completed_keys.add((str(r.get("case_id")), float(r.get("target_ratio")), int(r.get("run"))))
+            print(f"Resuming: loaded {len(rows)} previously completed runs from {output_path}")
+        except Exception as exc:
+            print(f"Could not load existing checkpoint, starting fresh: {exc}")
+            rows = []
+            completed_keys = set()
     cases = [
         json.loads(line)
         for line in Path(args.input).read_text(encoding="utf-8").splitlines()
@@ -75,6 +99,9 @@ def main():
     for case_index, case in enumerate(cases, start=1):
         for ratio in config.benchmark.ratios:
             for run_index in range(config.benchmark.runs_per_case):
+                cell_key = (str(case.get("id")), float(ratio), int(run_index + 1))
+                if cell_key in completed_keys:
+                    continue
                 prepared = middleware.prepare(
                     case.get("system_instruction", ""),
                     case["question"],
@@ -100,8 +127,14 @@ def main():
                 elif task == "multi_hop_qa":
                     quality["f1"] = token_f1(prediction, reference)
                     quality["rouge_l"] = rouge_l(prediction, reference)
+                    quality["semantic_similarity"] = semantic_similarity(prediction, reference)
+                    quality["key_fact_recall"] = key_fact_recall(prediction, reference)
                 elif task == "summarization":
-                    quality["rouge_l"] = rouge_l(prediction, reference)
+                    r_scores = rouge_scores(prediction, reference)
+                    quality["rouge_1"] = r_scores["rouge_1"]
+                    quality["rouge_2"] = r_scores["rouge_2"]
+                    quality["rouge_l"] = r_scores["rouge_l"]
+                    quality["key_fact_recall"] = key_fact_recall(prediction, reference)
                 else:
                     raise ValueError(f"Unsupported benchmark task: {task}")
 
@@ -155,7 +188,7 @@ def main():
                 )
 
                 # Periodically checkpoint results so an interrupted run loses little work.
-                if completed_runs % 12 == 0:
+                if completed_runs % 4 == 0:
                     checkpoint = Path(args.output)
                     checkpoint.parent.mkdir(parents=True, exist_ok=True)
                     pd.DataFrame(rows).to_csv(checkpoint, index=False)

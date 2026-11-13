@@ -48,7 +48,10 @@ def main():
     ) * 100
 
     quality_columns = [
-        col for col in ("exact_match", "f1", "rouge_l")
+        col for col in (
+            "exact_match", "f1", "rouge_l", "rouge_1", "rouge_2",
+            "semantic_similarity", "key_fact_recall",
+        )
         if col in df.columns
     ]
     measure_columns = [
@@ -80,7 +83,8 @@ def main():
     display_columns = ["task", "target_ratio"]
     for col in (
         "actual_compression_ratio", "context_token_reduction_pct",
-        "end_to_end_latency_ms", "exact_match", "f1", "rouge_l",
+        "compression_latency_ms", "inference_latency_ms", "end_to_end_latency_ms",
+        "exact_match", "f1", "rouge_l", "semantic_similarity", "key_fact_recall",
     ):
         mean_col = f"{col}_mean"
         if mean_col in summary.columns:

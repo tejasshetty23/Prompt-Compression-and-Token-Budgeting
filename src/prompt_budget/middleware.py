@@ -20,7 +20,14 @@ class PromptBudgetMiddleware:
     def __init__(self, config: AppConfig, telemetry_path: str = "artifacts/telemetry.jsonl"):
         self.config, self.telemetry_path = config, telemetry_path
         c = config.compression
-        self.compressor = LLMLinguaCompressor(c.model_name, c.use_llmlingua)
+        self.compressor = LLMLinguaCompressor(
+            c.model_name,
+            c.use_llmlingua,
+            adaptive_control=c.adaptive_control,
+            tolerance=c.tolerance,
+            max_refinements=c.max_refinements,
+            encoding_name=config.tokenizer.encoding_name,
+        )
 
     def prepare(self, system_instruction: str, question: str, context: str,
                 target_ratio: float | None = None, token_budget: int | None = None,
@@ -61,7 +68,7 @@ class PromptBudgetMiddleware:
                     "chunks_selected": len(ranked),
                 }
             else:
-                prepared_context, metadata = self.compressor.compress(selected_context, ratio)
+                prepared_context, metadata = self.compressor.compress(selected_context, ratio, question=question)
                 metadata["chunking"] = {
                     "tokenizer": "llmlingua" if tokenizer is not None else enc,
                     "chunk_size_tokens": chunk_size,

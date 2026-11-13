@@ -46,12 +46,55 @@ def test_llmlingua_rate_is_inverse_of_compression_ratio():
         def compress_prompt(self, context, **kwargs):
             self.rate = kwargs["rate"]
             return {"compressed_prompt": "short"}
-    compressor = LLMLinguaCompressor("fake-model", enabled=True)
+    compressor = LLMLinguaCompressor("fake-model", enabled=True, adaptive_control=False)
     compressor._model = FakeModel()
     output, metadata = compressor.compress("long context", 4)
     assert output == "short"
     assert compressor._model.rate == 0.25
-    assert metadata["retention_rate_requested"] == 0.25
+    assert metadata["target_ratio_requested"] == 4
+
+def test_calibrated_rate_formula():
+    assert LLMLinguaCompressor.calculate_calibrated_rate(1.0) == 1.0
+    r2 = LLMLinguaCompressor.calculate_calibrated_rate(2.0)
+    assert 0.53 <= r2 <= 0.57
+    r3 = LLMLinguaCompressor.calculate_calibrated_rate(3.0)
+    assert 0.37 <= r3 <= 0.41
+    r5 = LLMLinguaCompressor.calculate_calibrated_rate(5.0)
+    assert 0.23 <= r5 <= 0.27
+
+def test_adaptive_control_refinement():
+    calls = []
+    class MockModel:
+        def compress_prompt(self, context, rate, **kwargs):
+            calls.append(rate)
+            # On first call simulate overshoot (only 5 tokens kept out of 100)
+            if len(calls) == 1:
+                return {"compressed_prompt": "word " * 5}
+            # On refinement return target (20 tokens)
+            return {"compressed_prompt": "word " * 20}
+
+    compressor = LLMLinguaCompressor("fake-model", enabled=True, adaptive_control=True, tolerance=0.15, max_refinements=1)
+    compressor._model = MockModel()
+    output, metadata = compressor.compress("word " * 100, target_ratio=5.0)
+    assert len(calls) == 2
+    assert metadata["refinements"] == 1
+    assert calls[1] > calls[0]
+
+def test_requested_vs_actual_compression_bounds():
+    config = AppConfig()
+    middleware = PromptBudgetMiddleware(config)
+    context = (
+        "2026-10-01 09:00:02 INFO api-gateway accepted request id R-441. "
+        "2026-10-01 09:00:03 INFO auth-service validated the session. "
+        "2026-10-01 09:00:04 INFO inventory-service queried warehouse stock. "
+        "2026-10-01 09:00:05 WARN inventory-service retry 1 of 3 after upstream timeout. "
+        "2026-10-01 09:00:06 WARN inventory-service retry 2 of 3 after upstream timeout. "
+        "2026-10-01 09:00:07 ERROR inventory-service returned HTTP 503 after three retries."
+    )
+    for target in [1.0, 2.0, 3.0]:
+        res = middleware.prepare("Inst", "Which service failed?", context, target_ratio=target)
+        act = res.telemetry.original_tokens / max(1, res.telemetry.compressed_tokens)
+        assert abs(act - target) / target <= 0.20
 
 
 def test_chunk_overlap_uses_previous_chunk_suffix():

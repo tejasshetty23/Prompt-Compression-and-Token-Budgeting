@@ -7,6 +7,9 @@ compression:
   top_k_chunks: 8
   use_llmlingua: true
   model_name: microsoft/llmlingua-2-xlm-roberta-large-meetingbank
+  adaptive_control: true
+  tolerance: 0.15
+  max_refinements: 1
 tokenizer:
   encoding_name: cl100k_base
 cost:
@@ -14,5 +17,5 @@ cost:
   output_usd_per_1k_tokens: 0.0
 benchmark:
   ratios: [1.0, 2.0, 3.0, 5.0]
-  runs_per_case: 3
+  runs_per_case: 1
   temperature: 0

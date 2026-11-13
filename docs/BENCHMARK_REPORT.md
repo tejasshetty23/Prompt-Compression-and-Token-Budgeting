@@ -15,9 +15,9 @@ Prompt compression offers the theoretical promise of slashing token costs and ex
 2. **The "Local Inference Paradox":** Running a 560M parameter neural compressor on CPU introduces 3,000–4,500ms of latency overhead. When paired with small, fast local LLMs whose native inference takes only 50–400ms, prompt compression dramatically *increases* end-to-end latency by 10x to 60x, invalidating the common assumption that fewer tokens automatically guarantee faster execution.
 
 To address these challenges, we implemented:
-* A **calibrated power-law controller** ($r_0 = R^{-0.86}$) coupled with a closed-loop adaptive proportional feedback mechanism ($\tau = 0.15$), constraining actual compression within $\pm 5\%$ of target ratios.
+* A **calibrated power-law controller** ($r_0 = R^{-0.86}$) coupled with a closed-loop adaptive proportional feedback mechanism ($\tau = 0.15$), bringing task-averaged actual ratios close to requested targets; individual-case deviations remain material.
 * An expanded, rigorous **60-case benchmark dataset** spanning Extractive QA, Multi-Hop QA, and Incident Summarization across 9 critical infrastructure archetypes (Kubernetes, Kafka, PostgreSQL, Redis, CoreDNS, OAuth/IAM, gRPC microservices, CI/CD, and BGP/Cloud networking).
-* A multi-dimensional evaluation suite combining Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic Cosine Similarity (`sentence-transformers/all-MiniLM-L6-v2`).
+* A multi-dimensional evaluation suite combining Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic similarity (the implementation may use MiniLM embeddings or an explicitly labelled token-Jaccard fallback; the original CSV does not preserve backend provenance).
 
 ---
 
@@ -104,7 +104,7 @@ Summarization evaluates comprehensive retention of four postmortem facets: Cause
 
 ## 5. The "Local Inference Paradox": Latency & Cost Breakdown
 
-A critical finding of this research is the dramatic disparity between prompt compression on local models versus cloud APIs:
+A critical finding of this research is the dramatic disparity between prompt compression on local models versus cloud APIs. The cloud pricing examples below are illustrative scenarios only: this experiment used local Ollama inference and configured both input and output token prices as $0.00/1K tokens, so measured cost fields are zero and no commercial API savings were empirically measured.
 
 | Task | Target Ratio | Original Context (tokens) | Compressed Context (tokens) | Compression Latency (ms) | Inference Latency (ms) | End-to-End Latency (ms) | Overhead vs Baseline |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: |
@@ -156,3 +156,11 @@ Based on our empirical degradation tolerance ($\epsilon \le 0.15$):
 | **Multi-Hop QA** | **2.5x** | $\ge 85\%$ Semantic Sim | Safe up to 2.5x; causal connectives begin degrading past 3.0x. |
 | **Summarization** | **3.0x** | $\ge 92\%$ ROUGE-L | Excellent retention up to 3.0x; filters repetitive log noise. |
 | **Strict Latency Budget (<1s)** | **1.0x (Disabled)**| 100% | Disable compression on CPU/edge setups to avoid 3.4s overhead. |
+
+
+## 8. Validation caveats and reproducibility corrections
+
+- **Per-case ratio control:** The 240-row CSV contains 60 cases at each requested ratio. Only 25/60 cases at 2x, 25/60 at 3x, and 27/60 at 5x are within ±5% of their requested ratio. At ±15%, the counts are 58/60, 60/60, and 60/60 respectively. Therefore, the controller should be described as matching aggregate means, not guaranteeing ±5% per request. The 2x group includes two cases outside ±15%.
+- **Semantic metric provenance:** The original CSV has no backend column. The metric implementation can fall back to token Jaccard when MiniLM is unavailable. Existing semantic-similarity values therefore cannot be independently attributed to MiniLM from the committed artifact alone. The benchmark runner now records `semantic_metric_backend` for future runs.
+- **Cost interpretation:** The committed configuration uses zero input/output prices because inference is local through Ollama. Dollar-cost and cloud-provider savings are not measured outcomes; any commercial pricing discussion must be labelled hypothetical and tied to explicit price assumptions.
+- **Repetition:** `runs_per_case` is 1. The 240 rows are 60 cases × 4 ratios, not repeated trials. Means describe this single run per case and should not be presented as repeated-run statistical confidence.

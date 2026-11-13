@@ -508,11 +508,6 @@ with open(out_path, "w", encoding="utf-8") as f:
     for c in cases:
         f.write(json.dumps(c) + "\n")
 
-# Also update benchmark.example.jsonl as backup
-example_path = Path("data/benchmark.example.jsonl")
-with open(example_path, "w", encoding="utf-8") as f:
-    for c in cases:
-        f.write(json.dumps(c) + "\n")
 
 print(f"Successfully wrote {len(cases)} benchmark cases to {out_path}.")
 tasks = {}

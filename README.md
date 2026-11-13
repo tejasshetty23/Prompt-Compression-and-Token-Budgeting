@@ -142,7 +142,6 @@ python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --outp
 ├── data/
 │   ├── benchmark.jsonl              # 60 curated synthetic incident cases (20/task)
 │   ├── build_benchmark_dataset.py   # Dataset builder script
-│   └── documents/                   # Sample raw enterprise log and document inputs
 ├── docs/
 │   ├── DATASET.md                   # Dataset specification, taxonomy & statistics
 │   ├── METHODOLOGY.md               # Scientific methodology & control theory

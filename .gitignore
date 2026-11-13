@@ -10,6 +10,7 @@ venv/
 artifacts/*.log
 artifacts/*.jsonl
 artifacts/test_results.csv
+artifacts/paper_pages/
 !artifacts/benchmark_results.csv
 !artifacts/benchmark_summary.csv
 !artifacts/benchmark_case_summary.csv

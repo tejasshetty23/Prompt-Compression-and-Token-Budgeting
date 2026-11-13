@@ -31,7 +31,7 @@ Despite promising headline results on academic question-answering benchmarks, im
 
 ### Contributions
 In this work, we resolve these questions through systematic algorithmic refinement and extensive empirical benchmarking:
-* **Mathematical Analysis and Calibrated Adaptive Control:** We diagnose the mathematical and tokenizer-level mechanisms driving LLMLingua-2's compression overshooting. We formulate an empirical power-law mapping $r_0(R) = R^{-0.86}$ coupled with a proportional closed-loop controller that stabilizes actual compression ratios within $\pm 5\%$ of requested targets across all testing cells.
+* **Mathematical Analysis and Calibrated Adaptive Control:** We diagnose the mathematical and tokenizer-level mechanisms driving LLMLingua-2's compression overshooting. We formulate an empirical power-law mapping $r_0(R) = R^{-0.86}$ coupled with a proportional closed-loop controller that brings aggregate mean compression ratios close to requested targets; per-case deviations remain and are quantified in the reproducibility caveats.
 * **Preservation-Invariant Middleware Architecture:** We design and open-source an enterprise-grade Python middleware that guarantees strict context isolation, anchoring system instructions and user queries as immutable invariants while chunking, ranking, compressing, and enforcing hard per-request token budgets on diagnostic context.
 * **A Curated 60-Case Enterprise Benchmark Dataset:** We release a diverse, provenance-tracked evaluation suite of 60 real-world incident scenarios covering 9 infrastructure domains (Kubernetes, Kafka, PostgreSQL, Redis, CoreDNS, OAuth/IAM, gRPC microservices, CI/CD pipelines, and cloud networking) across Extractive QA, Multi-Hop QA, and Summarization.
 * **Comprehensive Multimodal Evaluation (240 Measured Runs):** Using local Ollama-served Qwen 2.5 1.5B with warm-up runs strictly excluded, we evaluate 240 model generations. We augment traditional n-gram metrics with semantic cosine embedding similarity (MiniLM embeddings when locally available (the original CSV did not record whether the fallback was used)) and factual keyphrase recall.
@@ -177,7 +177,7 @@ Evaluating $r_0(R)$ at our standard experimental ratios yields:
 * For $R = 5.0\text{x}$: $r_0 = 5.0^{-0.86} \approx \mathbf{0.2505}$ (vs. nominal 0.2000)
 
 ### C. Closed-Loop Adaptive Refinement
-While $r_0(R)$ aligns the population mean, structural variations across logs (e.g., dense JSON traces vs. sparse plain text) can introduce residual variance. To guarantee strict adherence, the middleware implements a closed-loop proportional controller:
+While $r_0(R)$ aligns the population mean, structural variations across logs (e.g., dense JSON traces vs. sparse plain text) can introduce residual variance. To reduce deviations, the middleware applies a single-step closed-loop proportional refinement when the initial ratio error exceeds the configured tolerance:
 
 ```python
 # Adaptive Compression Algorithm
@@ -281,12 +281,12 @@ Relative Latency vs Baseline        1.00x                   3.26x (Slower)      
 ```
 
 ### A. Compression Ratio Control & Predictability
-As demonstrated in Table II, our calibrated power-law controller completely resolves the overshooting failure mode. Whereas the uncalibrated baseline produced actual ratios of 2.28x, 3.60x, and 6.18x (with peaks exceeding 7.7x), our adaptive controller achieves:
+As demonstrated in Table II, calibration substantially improves aggregate ratio alignment relative to the uncalibrated baseline. The measured aggregate means are:
 * Target 2.0x $\to$ **1.980x** ($\pm 0.153$)
 * Target 3.0x $\to$ **2.984x** ($\pm 0.220$)
 * Target 5.0x $\to$ **4.837x** ($\pm 0.358$)
 
-This stability ensures that token budgets are respected without prematurely dropping context.
+These aggregate means indicate improved alignment, but do not guarantee that every individual request reaches its target ratio. The middleware's separate hard token-budget enforcement remains responsible for enforcing the configured prompt budget.
 
 ### B. Task Degradation Dynamics
 
@@ -406,7 +406,7 @@ Commercial Cloud API (GPT-4o)    3.0x          Cost Reduction >= 65%            
 
 ## XI. Conclusion
 
-Prompt compression represents a powerful mechanism for managing LLM context windows and token expenditure, but its successful deployment demands rigorous control theory and architectural awareness. In this work, we resolved the persistent issue of compression-ratio overshooting in LLMLingua-2 by developing a calibrated power-law formulation ($r_0 = R^{-0.86}$) and adaptive feedback controller, stabilizing compression within $\pm 5\%$ of target ratios. Across 240 measured inference runs on our 60-case enterprise incident benchmark, we mapped the precise degradation thresholds across Extractive QA, Multi-Hop QA, and Summarization, demonstrating that moderate compression (2.0x) acts as a beneficial noise filter for incident summarization while extractive tasks collapse past 2.0x. Finally, our latency decomposition revealed the "Local Inference Paradox," proving that neural compression on CPU introduces severe latency inflation for small edge LLMs and establishing the exact economic boundaries where prompt compression delivers genuine enterprise value.
+Prompt compression represents a powerful mechanism for managing LLM context windows and token expenditure, but its successful deployment demands rigorous control theory and architectural awareness. In this work, we resolved the persistent issue of compression-ratio overshooting in LLMLingua-2 by developing a calibrated power-law formulation ($r_0 = R^{-0.86}$) and adaptive feedback controller, bringing aggregate mean compression ratios close to their targets, while per-case ratio deviations remain material. Across 240 measured inference runs on our 60-case enterprise incident benchmark, we mapped the precise degradation thresholds across Extractive QA, Multi-Hop QA, and Summarization, demonstrating that moderate compression (2.0x) acts as a beneficial noise filter for incident summarization while extractive tasks collapse past 2.0x. Finally, our latency decomposition revealed the "Local Inference Paradox," proving that neural compression on CPU introduces severe latency inflation for small edge LLMs and establishing the exact economic boundaries where prompt compression delivers genuine enterprise value.
 
 ---
 

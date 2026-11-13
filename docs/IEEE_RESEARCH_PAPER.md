@@ -1,8 +1,7 @@
 # Prompt Compression and Token Budgeting for Enterprise Telemetry: Empirical Evaluation of LLMLingua-2 Control, Quality Tradeoffs, and Latency Bottlenecks
 
-**Tejas Shetty and Sushir C.**  
-*Department of Computer Science and Engineering*  
-*Autonomous AI Systems and Cloud Observability Lab*  
+**Tejas Shetty, Sushir C., Manya Vijay, and Shamika Mahesh**  
+*Department of Computer Science and Engineering, PES University, Bengaluru, India*  
 
 ---
 
@@ -412,13 +411,13 @@ Prompt compression represents a powerful mechanism for managing LLM context wind
 
 ## References
 
-[1] Y. Chen, H. Xie, M. Ma, Y. Kang, X. Gao, L. Shi, Y. Cao, X. Gao, H. Shen, and M. R. Lyu, "RCACopilot: Automated Root Cause Analysis for Large-Scale Online Service Incidents through Large Language Models," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 36, 2023, pp. 24866–24888, DOI: 10.48550/arXiv.2310.01463.  
-[2] M. Ahmed, M. S. R. Bashir, L. Zhang, and F. Khomh, "Recommending Root-Cause and Mitigation Steps for Cloud Incidents using Large Language Models," in *Proc. IEEE International Conference on Software Analysis, Evolution and Reengineering (SANER)*, 2023, pp. 312–324, DOI: 10.1109/SANER56732.2023.00041.  
+[1] Y. Chen, H. Xie, M. Ma, Y. Kang, X. Gao, L. Shi, Y. Cao, X. Gao, H. Fan, M. Wen, J. Zeng, S. Ghosh, X. Zhang, C. Zhang, Q. Lin, S. Rajmohan, D. Zhang, and T. Xu, "Automatic Root Cause Analysis via Large Language Models for Cloud Incidents," in *Proceedings of the 19th European Conference on Computer Systems (EuroSys ’24)*, 2024, DOI: 10.1145/3627703.3629553.  
+[2] T. Ahmed, S. Ghosh, C. Bansal, T. Zimmermann, X. Zhang, and S. Rajmohan, "Recommending Root-Cause and Mitigation Steps for Cloud Incidents using Large Language Models," in *Proceedings of the 45th IEEE/ACM International Conference on Software Engineering (ICSE)*, 2023, DOI: 10.1109/ICSE48619.2023.00149.  
 [3] N. F. Liu, K. Lin, J. Hewitt, A. Paranjape, M. Bevilacqua, F. Petroni, and P. Liang, "Lost in the Middle: How Language Models Use Long Contexts," *Transactions of the Association for Computational Linguistics (TACL)*, vol. 12, pp. 157–173, 2024.  
 [4] L. Zheng et al., "LMSYS Chatbot Arena: Benchmarking LLMs in the Wild," *arXiv preprint arXiv:2306.05685*, 2023.  
 [5] W. Kwon, Z. Li, S. Zhuang, Y. Sheng, L. Zheng, C. H. Yu, J. E. Gonzalez, H. Zhang, and I. Stoica, "Efficient Memory Management for Large Language Model Serving with PagedAttention," in *Proc. ACM Symp. on Operating Systems Principles (SOSP)*, 2023, pp. 611–626.  
 [6] H. Jiang, Q. Wu, C.-Y. Lin, Y. Yang, and L. Qiu, "LLMLingua: Compressing Prompts for Accelerated Inference of Large Language Models," in *Proc. Conf. on Empirical Methods in Natural Language Processing (EMNLP)*, 2023, pp. 13358–13376.  
-[7] Z. Pan, H. Jiang, C.-Y. Lin, Q. Wu, and L. Qiu, "LLMLingua-2: Data-Distillation for Efficient and Faithful Task-Agnostic Prompt Compression," in *Proc. Conf. on Empirical Methods in Natural Language Processing (EMNLP)*, 2024, pp. 8123–8141.  
+[7] Z. Pan, Q. Wu, H. Jiang, M. Xia, X. Luo, J. Zhang, Q. Lin, V. Rühle, Y. Yang, C.-Y. Lin, H. V. Zhao, L. Qiu, and D. Zhang, "LLMLingua-2: Data Distillation for Efficient and Faithful Task-Agnostic Prompt Compression," in *Findings of the Association for Computational Linguistics: ACL 2024*, pp. 963–981, DOI: 10.18653/v1/2024.findings-acl.57.  
 [8] P. Lewis et al., "Retrieval-Augmented Generation for Knowledge-Intensive NLP Tasks," in *Advances in Neural Information Processing Systems (NeurIPS)*, vol. 33, 2020, pp. 9459–9474.  
 [9] V. Karpukhin et al., "Dense Passage Retrieval for Open-Domain Question Answering," in *Proc. Conf. on Empirical Methods in Natural Language Processing (EMNLP)*, 2020, pp. 6769–6781.  
 [10] G. Salton and C. Buckley, "Term-weighting approaches in automatic text retrieval," *Information Processing & Management*, vol. 24, no. 5, pp. 513–523, 1988.  

@@ -32,6 +32,10 @@ Evaluated with **LLMLingua-2** (`microsoft/llmlingua-2-xlm-roberta-large-meeting
 
 ---
 
+## Research Paper
+
+The final research paper is available here: [Prompt Compression and Token Budgeting — Final Research Paper (PDF)](docs/Prompt_Compression_Research_Paper_Final.pdf).
+
 ## Architecture
 
 ```

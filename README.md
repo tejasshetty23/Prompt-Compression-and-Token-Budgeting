@@ -22,7 +22,7 @@ Evaluated with **LLMLingua-2** (`microsoft/llmlingua-2-xlm-roberta-large-meeting
 4. **Reliable Multimodal Evaluation Suite**:
    - Excluded model and compressor warm-ups.
    - Granular latency decomposition: Compression Latency vs Inference Latency vs End-to-End Latency.
-   - Task-appropriate metrics: Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic Cosine Similarity (`sentence-transformers/all-MiniLM-L6-v2`).
+   - Task-appropriate metrics: Exact Match, Token F1, ROUGE-1/2/L, Key Fact Recall, and Semantic similarity with explicit backend provenance (MiniLM when locally available; otherwise labelled token-Jaccard fallback).
    - Per-case and task-aggregated mean and standard deviation reporting.
 5. **Ingestion & Token Budgeting Middleware**:
    - Ingestion utilities for `.log`, `.pdf` (via `pdfplumber`), `.txt`, `.md`, `.csv`, and `.jsonl`.
@@ -123,7 +123,7 @@ python benchmarks/analyze_results.py --input artifacts/benchmark_results.csv --o
 ```
 
 ### Generating Research Figures
-Generate publication-quality accuracy, latency, cost, and compression-ratio graphs:
+Generate accuracy, latency, configured-cost, and compression-ratio graphs:
 ```bash
 python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --output-dir artifacts/figures
 ```

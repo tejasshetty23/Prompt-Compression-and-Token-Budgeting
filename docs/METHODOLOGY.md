@@ -50,7 +50,7 @@ Empirical validation shows that this power-law calibration accurately aligns act
 ### 3.3 Closed-Loop Proportional Feedback
 For outlier contexts where initial compression deviates from target ratio $R_{\text{target}}$ by more than tolerance $\tau = 0.15$:
 $$r_1 = \text{clip}\left(r_0 \times \frac{R_{\text{actual}}}{R_{\text{target}}}, 0.05, 1.0\right)$$
-A single refinement pass brings the ratio within tolerance while bounding computational overhead.
+A single refinement pass attempts to reduce the ratio error while bounding computational overhead; it does not guarantee that every case meets the tolerance.
 
 ---
 

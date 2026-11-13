@@ -45,11 +45,34 @@ def test_key_fact_recall():
 def test_semantic_similarity_paraphrase():
     pred = "The engineer increased the connection pool limit from 20 to 60."
     ref = "The database connection pool maximum was raised from 20 to 60."
-    sim = semantic_similarity(pred, ref)
-    assert sim > 0.70
+    from metrics import semantic_similarity_details
+    sim, backend = semantic_similarity_details(pred, ref)
+
+    if backend == "token-jaccard-fallback":
+        # Lexical overlap cannot reliably recognize paraphrases; verify that
+        # the fallback is reported instead of treating it as a semantic model.
+        assert 0.0 <= sim <= 1.0
+    else:
+        # The sentence-transformer backend should recognize this paraphrase.
+        assert sim > 0.70
 
 def test_semantic_similarity_unrelated():
     pred = "The weather in Seattle is rainy and cold."
     ref = "Kubernetes worker pod crashed due to an out of memory error."
     sim = semantic_similarity(pred, ref)
     assert sim < 0.30
+
+
+def test_semantic_similarity_reports_fallback_backend(monkeypatch):
+    import metrics
+    monkeypatch.setattr(metrics, "_get_semantic_model", lambda: (False, None))
+    score, backend = metrics.semantic_similarity_details("alpha beta", "alpha gamma")
+    assert score == pytest.approx(1 / 3)
+    assert backend == "token-jaccard-fallback"
+
+
+def test_semantic_similarity_reports_empty_input_backend():
+    from metrics import semantic_similarity_details
+    score, backend = semantic_similarity_details("", "reference")
+    assert score == 0.0
+    assert backend == "empty-string-exact-match"

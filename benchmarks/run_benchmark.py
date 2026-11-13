@@ -15,7 +15,7 @@ from metrics import (
     rouge_l,
     rouge_scores,
     key_fact_recall,
-    semantic_similarity,
+    semantic_similarity_details,
 )
 
 
@@ -127,7 +127,9 @@ def main():
                 elif task == "multi_hop_qa":
                     quality["f1"] = token_f1(prediction, reference)
                     quality["rouge_l"] = rouge_l(prediction, reference)
-                    quality["semantic_similarity"] = semantic_similarity(prediction, reference)
+                    semantic_score, semantic_backend = semantic_similarity_details(prediction, reference)
+                    quality["semantic_similarity"] = semantic_score
+                    quality["semantic_metric_backend"] = semantic_backend
                     quality["key_fact_recall"] = key_fact_recall(prediction, reference)
                 elif task == "summarization":
                     r_scores = rouge_scores(prediction, reference)

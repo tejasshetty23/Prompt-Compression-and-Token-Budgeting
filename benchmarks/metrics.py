@@ -62,7 +62,6 @@ def _get_semantic_model():
     global _SEMANTIC_MODEL, _SEMANTIC_TOKENIZER
     if _SEMANTIC_MODEL is None:
         try:
-            import os
             import torch
             from transformers import AutoTokenizer, AutoModel
             model_id = "sentence-transformers/all-MiniLM-L6-v2"
@@ -73,18 +72,18 @@ def _get_semantic_model():
             _SEMANTIC_MODEL = False
     return _SEMANTIC_MODEL, _SEMANTIC_TOKENIZER
 
-def semantic_similarity(prediction: str, reference: str) -> float:
-    """Cosine similarity of MiniLM embeddings for semantic multi-hop answer evaluation."""
+def semantic_similarity_details(prediction: str, reference: str) -> tuple[float, str]:
+    """Return semantic score and the actual backend used; fallback is explicitly labelled."""
     if not prediction.strip() or not reference.strip():
-        return float(prediction.strip() == reference.strip())
+        return float(prediction.strip() == reference.strip()), "empty-string-exact-match"
     model, tokenizer = _get_semantic_model()
     if not model or tokenizer is None:
         # Fallback to token overlap / jaccard similarity
         pred_words = set(normalize_answer(prediction).split())
         ref_words = set(normalize_answer(reference).split())
         if not pred_words or not ref_words:
-            return 0.0
-        return len(pred_words & ref_words) / len(pred_words | ref_words)
+            return 0.0, "token-jaccard-fallback"
+        return len(pred_words & ref_words) / len(pred_words | ref_words), "token-jaccard-fallback"
     import torch
     import torch.nn.functional as F
     with torch.no_grad():
@@ -95,4 +94,9 @@ def semantic_similarity(prediction: str, reference: str) -> float:
         sum_mask = torch.clamp(mask.sum(1), min=1e-9)
         emb = F.normalize(sum_embeddings / sum_mask, p=2, dim=1)
         sim = (emb[0] @ emb[1]).item()
-        return max(0.0, float(sim))
+        return max(0.0, float(sim)), "sentence-transformers/all-MiniLM-L6-v2"
+
+
+def semantic_similarity(prediction: str, reference: str) -> float:
+    """Backward-compatible score-only wrapper; use details to retain provenance."""
+    return semantic_similarity_details(prediction, reference)[0]

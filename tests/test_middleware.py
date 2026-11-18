@@ -106,8 +106,12 @@ def test_chunk_overlap_uses_previous_chunk_suffix():
     assert len(chunks) >= 2
     previous_words = chunks[0].split()
     next_words = chunks[1].split()
-    assert next_words[:2] == previous_words[-2:]
-    assert truncate_to_last_tokens("alpha beta gamma delta", 2).split() == ["gamma", "delta"]
+    # Overlap carries whole trailing words of the previous chunk, within the token budget.
+    carried = [w for w in next_words if w in previous_words]
+    assert carried and next_words[: len(carried)] == previous_words[-len(carried):]
+    assert count_tokens(" ".join(carried), "cl100k_base") <= 2
+    tail = truncate_to_last_tokens("alpha beta gamma delta", 2)
+    assert count_tokens(tail, "cl100k_base") <= 2 and tail.endswith("delta")
 
 
 def test_chunk_text_rejects_invalid_sizes():

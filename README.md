@@ -83,7 +83,7 @@ pip install -e ".[dev,compression]"
    ```
 3. Set environment variables:
    ```bash
-   export LLM_BASE_URL="http://localhost:11434/v1"
+   export LLM_BASE_URL="http://127.0.0.1:11434/v1"  # 127.0.0.1 avoids a ~2 s IPv6 fallback on Windows
    export LLM_MODEL="qwen2.5:1.5b"
    export LLM_API_KEY="ollama"
    ```
@@ -113,6 +113,26 @@ Send POST requests to `/compress` with:
   "task": "extractive_qa"
 }
 ```
+
+### Running the Web UI
+
+A chat-style frontend lives in `frontend/` (React + Vite). Attach logs or documents as context, pick a target ratio and optional token budget, and ask questions; each answer shows what the middleware did (tokens before/after, actual vs. target ratio, latency, retention rate, chunks kept, and the exact context sent to the model). A Benchmarks page shows `artifacts/benchmark_summary.csv` and the figures.
+
+Requires Node.js 18+ and a running Ollama daemon.
+
+```bash
+# Terminal 1 (repo root): API on :8000, preloads LLMLingua-2 in the background
+uvicorn prompt_budget.api:app --reload
+
+# Terminal 2: dev server on http://localhost:5173 (proxies /api to :8000)
+cd frontend
+npm install
+npm run dev
+```
+
+For a single-process setup, run `npm run build` in `frontend/` once; the API then serves the built UI at http://127.0.0.1:8000/. Set `PROMPT_BUDGET_PRELOAD=0` to skip the compressor preload.
+
+UI endpoints (all under `/api`): `GET /health`, `POST /chat` (NDJSON stream: compression result, then answer tokens), `POST /compress`, `POST /ingest?filename=…` (raw file body → text), `POST /tokens`, `GET /samples`, `GET /benchmarks`, `GET /figures/{name}`. The original `POST /compress` is unchanged.
 
 ### Running the Benchmark
 Run the full 60-case benchmark across 1x, 2x, 3x, and 5x compression ratios:
@@ -163,7 +183,8 @@ python benchmarks/plot_results.py --input artifacts/benchmark_results.csv --outp
 │   ├── telemetry.py                 # Telemetry & cost logging
 │   ├── llm_client.py                # Local OpenAI-compatible inference client
 │   ├── config.py                    # Configuration loading and validation
-│   └── api.py                       # FastAPI REST service
+│   └── api.py                       # FastAPI REST service + web UI endpoints
+├── frontend/                        # React + Vite chat UI (npm run dev / npm run build)
 └── tests/
     ├── test_middleware.py           # Middleware regression & unit tests
     └── test_metrics.py              # Evaluation metric tests

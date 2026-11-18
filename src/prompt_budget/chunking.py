@@ -45,10 +45,14 @@ def chunk_text(
         if current and count_tokens(candidate, encoding_name) > chunk_size:
             previous = " ".join(current)
             chunks.append(previous)
-            carry = (
-                truncate_to_last_tokens(previous, overlap, encoding_name).split()
-                if overlap else []
-            )
+            # Carry whole trailing words (never a mid-word token fragment)
+            # whose combined token count fits within the overlap budget.
+            carry = []
+            if overlap:
+                for w in reversed(current):
+                    if count_tokens(" ".join([w] + carry), encoding_name) > overlap:
+                        break
+                    carry.insert(0, w)
             current = carry + [word]
         else:
             current.append(word)

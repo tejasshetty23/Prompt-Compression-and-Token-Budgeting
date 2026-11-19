@@ -77,34 +77,58 @@ app.router.lifespan_context = _lifespan
 
 
 def _prepare(request: CompressRequest):
-    with _compress_lock:
+    needs_compression = (
+        config.compression.enabled
+        and request.target_ratio > 1.0
+        and bool(request.context.strip())
+    )
+    if needs_compression:
+        with _compress_lock:
+            result = middleware.prepare(
+                system_instruction=request.system_instruction,
+                question=request.question,
+                context=request.context,
+                target_ratio=request.target_ratio,
+                token_budget=request.token_budget,
+                task=request.task,
+            )
+    else:
         result = middleware.prepare(
             system_instruction=request.system_instruction,
             question=request.question,
             context=request.context,
-            target_ratio=request.target_ratio,
+            target_ratio=1.0,
             token_budget=request.token_budget,
             task=request.task,
         )
-        t = result.telemetry
-        if t.original_context_tokens == 0:
-            print(
-                f"\n[PromptBudget] === Request Processed (No Context Attached) ===\n"
-                f"  Question: '{request.question[:80]}'\n"
-                f"  Notice: Context is empty (no log/doc attached). Zero compression applied.\n"
-                f"  Total Prompt Tokens: {t.prompt_tokens}\n"
-            )
-        else:
-            print(
-                f"\n[PromptBudget] === Prompt Compression Event ===\n"
-                f"  Question: '{request.question[:80]}'\n"
-                f"  Task: {request.task} | Target Ratio: {request.target_ratio}x | Budget Cap: {request.token_budget or 'unlimited'}\n"
-                f"  Context Tokens: {t.original_context_tokens} -> {t.compressed_context_tokens} "
-                f"({t.context_token_reduction_pct:.1f}% reduction, actual ratio: {t.actual_compression_ratio:.2f}x)\n"
-                f"  Total Prompt Tokens: {t.prompt_tokens}\n"
-                f"  Compression Latency: {t.compression_latency_ms:.1f} ms\n"
-            )
-        return result
+
+    t = result.telemetry
+    if t.original_context_tokens == 0:
+        print(
+            f"\n[PromptBudget] === Request Processed (No Context Attached) ===\n"
+            f"  Question: '{request.question[:80]}'\n"
+            f"  Notice: Context is empty (no log/doc attached). Zero compression applied.\n"
+            f"  Total Prompt Tokens: {t.prompt_tokens}\n"
+        )
+    elif not needs_compression:
+        print(
+            f"\n[PromptBudget] === Request Processed (1x / No Compression Bypass) ===\n"
+            f"  Question: '{request.question[:80]}'\n"
+            f"  Notice: Bypassed CPU neural compression lock. Raw context sent straight to LLM.\n"
+            f"  Context Tokens: {t.original_context_tokens}\n"
+            f"  Total Prompt Tokens: {t.prompt_tokens}\n"
+        )
+    else:
+        print(
+            f"\n[PromptBudget] === Prompt Compression Event ===\n"
+            f"  Question: '{request.question[:80]}'\n"
+            f"  Task: {request.task} | Target Ratio: {request.target_ratio}x | Budget Cap: {request.token_budget or 'unlimited'}\n"
+            f"  Context Tokens: {t.original_context_tokens} -> {t.compressed_context_tokens} "
+            f"({t.context_token_reduction_pct:.1f}% reduction, actual ratio: {t.actual_compression_ratio:.2f}x)\n"
+            f"  Total Prompt Tokens: {t.prompt_tokens}\n"
+            f"  Compression Latency: {t.compression_latency_ms:.1f} ms\n"
+        )
+    return result
 
 
 def _public_metadata(metadata: dict) -> dict:
